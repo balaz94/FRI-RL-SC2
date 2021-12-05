@@ -35,7 +35,7 @@ def worker(connection, env_info, env_func, count_of_envs, count_of_iterations, c
 
             observations = []
             for i in range(count_of_envs):
-                obs, reward, terminal, _ = envs[i].step(actions[i].item())
+                obs, reward, terminal = envs[i].step(actions[i].item())
                 mem_rewards[step, i, 0] = reward
                 game_score[i] += reward
 
