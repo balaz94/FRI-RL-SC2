@@ -20,7 +20,7 @@ class Env:
                     raw_resolution=64),
         'step_mul': 0,
         'game_steps_per_episode' : 0,
-        'visualize' : False,
+        'visualize' : True,
         'realtime': False
     }
 
