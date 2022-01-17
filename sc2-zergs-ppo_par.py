@@ -43,21 +43,6 @@ def learning(count_of_iterations):
 
     agent.train("", Env, count_of_processes, count_of_envs, count_of_iterations, count_of_steps, batch_size, count_of_epochs, first_iteration, input_dim)
 
-def graf():
-    df = pd.read_csv('results/zergs/' + 'data/ppo.csv')
-
-    fig = go.Figure([go.Scatter(x=df['iteration'], y=df['avg_score'])])
-    fig.update_layout(
-        xaxis_title="Iteration",
-        yaxis_title="Average score",
-        font=dict(
-            family="Courier New, monospace",
-            size = 18
-        )
-    )
-    fig.show();
-
-
 
 if __name__ == "__main__":
    learning(2000)
