@@ -9,7 +9,9 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import graph.make_graph
 from agents.ppo_parallel import Agent
+
 
 
 
@@ -27,19 +29,18 @@ def learning(count_of_iterations):
     device = "cuda" if torch.cuda.is_available() else "cpu"
     results_path = 'results/shards/'
 
-    agent = Agent(PolicyValueModel(16, 512), gamma, entropy_loss_coef, value_loss_coef ,epsilon, lr, name, optim, device,results_path)
+    agent = Agent(PolicyValueModel(8, 512), gamma, entropy_loss_coef, value_loss_coef ,epsilon, lr, name, optim, device,results_path)
 
-    count_of_processes = 1
-    count_of_envs = 1
-    count_of_steps = 1500
-    batch_size = 500
+    count_of_processes = 3
+    count_of_envs = 2
+    count_of_steps = 1250
+    batch_size = 750
     count_of_epochs = 4
     first_iteration = 0
     input_dim = (3, 64, 64)
 
     agent.train("", Env, count_of_processes, count_of_envs, count_of_iterations, count_of_steps, batch_size, count_of_epochs, first_iteration, input_dim)
 
-
-
 if __name__ == "__main__":
-    learning(2000)
+   learning(2000)
+   # graph.make_graph.scatter_plot('results/shards/data/ppo.csv')

@@ -1,5 +1,8 @@
 from collections import deque
 
+import plotly.graph_objects as go
+import pandas as pd
+
 from pyglet.resource import animation
 
 from envs.sc2_find_and_defeat_zerglings_env import Env
@@ -9,6 +12,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import graph.make_graph
 from agents.ppo_parallel import Agent
 
 
@@ -25,9 +29,9 @@ def learning(count_of_iterations):
     name = 'ppo'
     optim = 'Adam'
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    results_path = 'results/shards/'
+    results_path = 'results/zergs/'
 
-    agent = Agent(PolicyValueModel(32, 2048), gamma, entropy_loss_coef, value_loss_coef ,epsilon, lr, name, optim, device,results_path)
+    agent = Agent(PolicyValueModel(16, 2048), gamma, entropy_loss_coef, value_loss_coef ,epsilon, lr, name, optim, device,results_path)
 
     count_of_processes = 1
     count_of_envs = 1
@@ -39,7 +43,25 @@ def learning(count_of_iterations):
 
     agent.train("", Env, count_of_processes, count_of_envs, count_of_iterations, count_of_steps, batch_size, count_of_epochs, first_iteration, input_dim)
 
+def graf():
+    df = pd.read_csv('results/zergs/' + 'data/ppo.csv')
+
+    fig = go.Figure([go.Scatter(x=df['iteration'], y=df['avg_score'])])
+    fig.update_layout(
+        xaxis_title="Iteration",
+        yaxis_title="Average score",
+        font=dict(
+            family="Courier New, monospace",
+            size = 18
+        )
+    )
+    fig.show();
+
 
 
 if __name__ == "__main__":
-    learning(2000)
+   learning(2000)
+   # graph.make_graph.scatter_plot('results/zergs/data/ppo.csv')
+
+
+
