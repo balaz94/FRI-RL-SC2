@@ -29,14 +29,15 @@ def learning(count_of_iterations):
 
     agent = Agent(PolicyValueModel(8, 1936), gamma, entropy_loss_coef, value_loss_coef ,epsilon, lr, name, optim, device,results_path)
 
-    count_of_processes = 1
-    count_of_envs = 1
-    count_of_steps = 1500
-    batch_size = 500
+    count_of_processes = 3
+    count_of_envs = 2
+    count_of_steps = 1250
+    batch_size = 750
     count_of_epochs = 4
     first_iteration = 0
     input_dim = (2, 84, 84)
 
+    agent.load_model('results/beacon/models/ppo1_ppo.pt')
     agent.train("", Env, count_of_processes, count_of_envs, count_of_iterations, count_of_steps, batch_size, count_of_epochs, first_iteration, input_dim)
 
 

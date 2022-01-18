@@ -22,6 +22,7 @@ def worker(connection, env_info, env_func, count_of_envs, count_of_iterations, c
         mem_non_terminals = torch.ones((count_of_steps, count_of_envs, 1))
         score_of_end_games = []
 
+
         for step in range(count_of_steps):
             connection.send(observations)
             logits, values = connection.recv()
@@ -71,6 +72,7 @@ class Agent:
         self.device = device
         self.model = model
         self.model.to(device)
+        self.iteration = 0
 
         if optim == 'Adam':
             print('optimizer: Adam')
@@ -104,7 +106,7 @@ class Agent:
 
         count_of_steps_per_iteration = count_of_processes * count_of_steps * count_of_envs
         count_of_losses = count_of_steps_per_iteration * count_of_epochs / batch_size
-        scores, best_avg_score, best_score, count_of_episodes = [], -1e9, -1e9, 0
+        scores, best_avg_score, best_score, count_of_episodes, prev_avg_score = [], -1e9, -1e9, 0, 0
 
         processes, connections = [], []
         for _ in range(count_of_processes):
@@ -117,6 +119,7 @@ class Agent:
         start = datetime.datetime.now()
 
         for iteration in range(first_iteration, count_of_iterations):
+            self.iteration = iteration
             for step in range(count_of_steps):
                 observations = []
                 for coonection in connections:
@@ -137,9 +140,6 @@ class Agent:
                 values = values.view(-1, count_of_envs, 1).cpu()
             for conn_idx in range(count_of_processes):
                 connections[conn_idx].send(values[conn_idx])
-
-            if iteration > 0 and iteration % 1000 == 0:
-                torch.save(self.model.state_dict(), self.results_path + 'models/' + self.name + '_' + str(iteration) + '.pt')
 
             mem_observations, mem_actions, mem_log_probs, mem_target_values, mem_advantages, end_games = [], [], [], [], [], []
 
@@ -164,6 +164,7 @@ class Agent:
                 if length > 100:
                     scores = scores[length - 100:]
                 avg_score = np.average(scores)
+                prev_avg_score = best_avg_score
                 best_avg_score = max(best_avg_score, avg_score)
                 logs += '\n' + str(iteration) + ',' + str(count_of_episodes) + ',' + str(avg_score) + ',' + str(best_score) + ',' + str(best_avg_score)
                 if iteration % 100 == 0:
@@ -207,9 +208,18 @@ class Agent:
             if iteration % 10 == 0:
                 write_to_file(logs, self.results_path + 'data/' + self.name + '.txt')
                 write_to_file(logs_losses, self.results_path + 'data/' + self.name + '_loss.txt')
+                if best_avg_score > prev_avg_score:
+                    self.save_model()
 
         print('training', datetime.datetime.now() - start)
 
         for connection in connections:
             connection.send(1)
         [process.join() for process in processes]
+
+    def save_model(self):
+        torch.save(self.model.state_dict(), self.results_path + 'models/' + self.name + str(self.iteration) + '_ppo.pt')
+
+    def load_model(self, path):
+        self.model.load_state_dict(torch.load(path))
+
