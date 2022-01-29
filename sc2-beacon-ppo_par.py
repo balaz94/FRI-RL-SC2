@@ -22,7 +22,7 @@ def learning(count_of_iterations):
     epsilon = 0.1
     
     lr = 0.00025
-    name = 'ppo'
+    name = 'beacon'
     optim = 'Adam'
     device = "cuda" if torch.cuda.is_available() else "cpu"
     results_path = 'results/beacon/'
