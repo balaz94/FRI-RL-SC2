@@ -29,17 +29,19 @@ def learning(count_of_iterations):
     device = "cuda" if torch.cuda.is_available() else "cpu"
     results_path = 'results/shards/'
 
-    agent = Agent(PolicyValueModel(8, 512), gamma, entropy_loss_coef, value_loss_coef ,epsilon, lr, name, optim, device,results_path)
+    count_of_actions = 8
+    agent = Agent(PolicyValueModel(count_of_actions, 512), gamma, entropy_loss_coef, value_loss_coef ,epsilon, lr, name, optim, device,results_path)
 
     count_of_processes = 3
     count_of_envs = 2
     count_of_steps = 1250
     batch_size = 750
     count_of_epochs = 4
+
     first_iteration = 0
     input_dim = (3, 64, 64)
 
-    agent.train("", Env, count_of_processes, count_of_envs, count_of_iterations, count_of_steps, batch_size, count_of_epochs, first_iteration, input_dim)
+    agent.train("", Env, count_of_actions, count_of_iterations, count_of_processes, count_of_envs, count_of_steps, count_of_epochs, batch_size, input_dim)
 
 if __name__ == "__main__":
    learning(2000)

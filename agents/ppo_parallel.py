@@ -7,7 +7,7 @@ from utils.stats import MovingAverageScore, write_to_file
 
 def worker(connection, env_params, env_func, count_of_iterations, count_of_envs,
            count_of_steps, gamma, gae_lambda):
-    envs = [env_func(**env_params) for _ in range(count_of_envs)]
+    envs = [env_func(*env_params) for _ in range(count_of_envs)]
     observations = torch.stack([torch.from_numpy(env.reset()) for env in envs])
     game_score = np.zeros(count_of_envs)
 

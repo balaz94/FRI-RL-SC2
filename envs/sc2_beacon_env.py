@@ -68,7 +68,7 @@ class Env:
         else:
             self.action_counter += 1
             reward = -0.0001
-        return new_state, reward, terminal
+        return new_state, reward, terminal, 0
 
     def take_action(self, action):
         x_axis_offset = 0
