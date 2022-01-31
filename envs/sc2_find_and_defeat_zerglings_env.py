@@ -24,7 +24,7 @@ class Env:
         'step_mul': 4,
         'game_steps_per_episode' : 0,
         'visualize' : True,
-        'realtime': True
+        'realtime': False
     }
 
     def __init__(self, **kwargs):

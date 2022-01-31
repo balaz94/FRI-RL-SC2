@@ -39,11 +39,10 @@ def learning(count_of_iterations):
     first_iteration = 0
 
     input_dim = (2, 84, 84)
-    agent.load_model('results/beacon/models/ppo1_ppo.pt')
     agent.train("", Env, count_of_actions, count_of_iterations, count_of_processes, count_of_envs, count_of_steps,
                 count_of_epochs, batch_size, input_dim)
 
 
 
 if __name__ == "__main__":
-    learning(2000)
+    learning(200)

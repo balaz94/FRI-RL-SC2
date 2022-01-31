@@ -26,16 +26,16 @@ def learning(count_of_iterations):
     lr = 0.00025
     name = 'shards'
     optim = 'Adam'
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    device = "cpu"
     results_path = 'results/shards/'
 
-    count_of_actions = 8
-    agent = Agent(PolicyValueModel(count_of_actions, 512), gamma, entropy_loss_coef, value_loss_coef ,epsilon, lr, name, optim, device,results_path)
+    count_of_actions = 16
+    agent = Agent(PolicyValueModel(count_of_actions, 512), optim, gamma, epsilon, 0.001, 0.5, 0.95, name, results_path, device)
 
-    count_of_processes = 3
-    count_of_envs = 2
-    count_of_steps = 1250
-    batch_size = 750
+    count_of_processes = 1
+    count_of_envs = 1
+    count_of_steps = 256
+    batch_size = 128
     count_of_epochs = 4
 
     first_iteration = 0
@@ -43,6 +43,7 @@ def learning(count_of_iterations):
 
     agent.train("", Env, count_of_actions, count_of_iterations, count_of_processes, count_of_envs, count_of_steps, count_of_epochs, batch_size, input_dim)
 
+
 if __name__ == "__main__":
-   learning(2000)
+   learning(50)
    # graph.make_graph.scatter_plot('results/shards/data/ppo.csv')
