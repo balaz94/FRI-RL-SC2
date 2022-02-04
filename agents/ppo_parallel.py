@@ -66,10 +66,23 @@ def worker(connection, env_params, env_func, count_of_iterations, count_of_envs,
 class Agent:
     def __init__(self, model, optimizer, gamma=0.997, epsilon=0.1,
                  coef_value=0.5, coef_entropy=0.001, gae_lambda=0.95,
-                 name='ppo', path='results/ppo/pong/', device='cpu'):
+                 name='ppo', path='results/ppo/pong/', device='cpu', lr = 0.00025):
 
         self.model = model
-        self.optimizer = optimizer
+        self.model.to(device)
+
+        if optimizer == 'Adam':
+            print('optimizer: Adam')
+            self.optimizer = torch.optim.Adam(self.model.parameters(), lr = lr)
+        elif optimizer == 'SGD':
+            print('optimizer: SGD wiht momentum = 0.9')
+            self.optimizer = torch.optim.SGD(self.model.parameters(), lr = lr, momentum = 0.9)
+        elif optimizer == 'RMS':
+            print('optimizer: RMSProp')
+            self.optimizer = torch.optim.RMSprop(self.model.parameters(), lr = lr)
+        else:
+            print('optimizer: SGD wiht momentum = 0.0')
+            self.optimizer = torch.optim.SGD(self.model.parameters(), lr = lr)
 
         self.gamma = gamma
         self.coef_value = coef_value
@@ -153,7 +166,9 @@ class Agent:
             print('iteration: ', iteration, '\taverage score: ', avg_score)
             if best_score:
                 print('New best avg score has been achieved', avg_score)
-                torch.save(self.model.state_dict(), self.path + 'results/' + self.name + "/models/"
+                torch.save(self.model.state_dict(), self.path + "/models/best.pt")
+            if iteration % 10 == 0:
+                torch.save(self.model.state_dict(), self.path + "/models/iteration_"
                            + str(iteration) + ".pt")
 
             mem_observations = mem_observations.view(-1, *input_dim)
@@ -222,6 +237,7 @@ class Agent:
 
     # def save_model(self):
     #     torch.save(self.model.state_dict(), self.results_path + 'models/' + self.name + str(self.iteration) + '_ppo.pt')
-    #
+
+
     def load_model(self, path):
         self.model.load_state_dict(torch.load(path))

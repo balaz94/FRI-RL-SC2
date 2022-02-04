@@ -28,27 +28,50 @@ def learning(count_of_iterations):
     lr = 0.00025
     name = 'zergs'
     optim = 'Adam'
-    device = "cpu"
+    device = "cuda"
     results_path = 'results/zergs/'
 
-    count_of_actions = 36
+    count_of_actions = 32
     agent = Agent(PolicyValueModel(count_of_actions, 2048), optim, gamma, epsilon, 0.001, 0.5, 0.95, name, results_path, device)
 
     count_of_processes = 3
     count_of_envs = 2
-    count_of_steps = 1500
-    batch_size = 500
+    count_of_steps = 128
+    batch_size = 128
     count_of_epochs = 4
-    first_iteration = 0
     input_dim = (3, 64, 64)
 
     agent.train("", Env, count_of_actions, count_of_iterations, count_of_processes, count_of_envs, count_of_steps,
                 count_of_epochs, batch_size, input_dim)
 
+def animation():
+    model = PolicyValueModel(32, 2048) # zergs
+    model.to("cuda")
+    model.load_state_dict(torch.load("results/zergs/models/best.pt"))
+
+    env = Env(*"")
+    i = 0
+    while i < 10:
+        terminal = False
+        i += 1
+        observations = torch.from_numpy(env.reset())
+        while not terminal:
+            with torch.no_grad():
+                observations = observations.to("cuda").unsqueeze(0).float()
+                logits, values = model(observations)
+
+                #logits, _, _ = model.policy_model(state)
+                probs = F.softmax(logits, dim=-1)
+                action = probs.multinomial(num_samples=1)
+
+            new_state,_,terminal,_ = env.step(action[0,0].item())
+            observations = torch.from_numpy(new_state)
+
 
 if __name__ == "__main__":
-   learning(2000)
-   # graph.make_graph.scatter_plot('results/zergs/data/ppo.csv')
+    #learning
+    animation()
+
 
 
 
