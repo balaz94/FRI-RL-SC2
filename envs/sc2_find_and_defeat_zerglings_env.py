@@ -23,8 +23,8 @@ class Env:
                     use_camera_position=True),
         'step_mul': 4,
         'game_steps_per_episode' : 0,
-        'visualize' : True,
-        'realtime': True
+        'visualize' : False,
+        'realtime': False
     }
 
     def __init__(self, **kwargs):
@@ -145,7 +145,11 @@ class Env:
             else:
                 mapped_action = actions.RAW_FUNCTIONS.no_op()
         elif  32 > action >= 24:
-            mapped_action = actions.RAW_FUNCTIONS.raw_move_camera([self.camera_pos[0] + x_axis_offset, self.camera_pos[1] + y_axis_offset])
+            if self.last_target_pos is not None:
+                mapped_action = actions.RAW_FUNCTIONS.raw_move_camera(self.last_target_pos)
+            else:
+                mapped_action = actions.RAW_FUNCTIONS.no_op()
+
         else:
             assert False
         raw_obs = self.env.step([mapped_action])[0]

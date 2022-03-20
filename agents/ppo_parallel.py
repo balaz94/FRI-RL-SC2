@@ -167,7 +167,7 @@ class Agent:
                 prev_avg_score = best_avg_score
                 best_avg_score = max(best_avg_score, avg_score)
                 logs += '\n' + str(iteration) + ',' + str(count_of_episodes) + ',' + str(avg_score) + ',' + str(best_score) + ',' + str(best_avg_score)
-                if iteration % 100 == 0:
+                if iteration % 1 == 0:
                     print('iteration', iteration, '\tepisode', count_of_episodes, '\tavg score', avg_score, '\tbest score', best_score, '\tbest avg score', best_avg_score)
 
             mem_observations = torch.stack(mem_observations).to(self.device).view((-1, ) + input_dim)
@@ -205,7 +205,7 @@ class Agent:
                     self.optimizer.step()
 
             logs_losses +=  '\n' + str(iteration) + ',' + str(len(scores)) + ',' + str(sum_policy_loss / count_of_losses) + ',' + str(sum_value_loss / count_of_losses) + ',' + str(sum_entropy_loss / count_of_losses)
-            if iteration % 10 == 0:
+            if iteration % 1 == 0:
                 write_to_file(logs, self.results_path + 'data/' + self.name + '.txt')
                 write_to_file(logs_losses, self.results_path + 'data/' + self.name + '_loss.txt')
                 if best_avg_score > prev_avg_score:
