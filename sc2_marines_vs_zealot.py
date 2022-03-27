@@ -53,13 +53,13 @@ def learning(count_of_iterations):
     # signal.signal(signal.SIGTERM, at_exist)
     # signal.signal(signal.SIGINT, at_exist)
 
-    count_of_processes = 3
-    count_of_envs = 2
+    count_of_processes = 1
+    count_of_envs = 1
     count_of_steps = 1024
     batch_size = 1024
     count_of_epochs = 4
     first_iteration = 0
-    input_dim = (21, 64, 64)
+    input_dim = (29, 64, 64)
 
     agent.train("", Env, count_of_processes, count_of_envs, count_of_iterations, count_of_steps, batch_size, count_of_epochs, first_iteration, input_dim)
 

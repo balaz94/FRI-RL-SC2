@@ -112,27 +112,29 @@ class Env:
             if not mar_assigned:
                 self.marine3 = None
 
-        attack_matrix = np.zeros((1,64, 64))
+        attack1_matrix = np.zeros((1,64, 64))
+        attack2_matrix = np.zeros((1,64, 64))
+        attack3_matrix = np.zeros((1,64, 64))
 
         marine1_matrix = np.zeros((1,64, 64))
         if self.marine1 is not None:
              marine1_matrix[0,self.marine1.x,self.marine1.y] = self.marine1.health / 45.0
              if self.marine_attack[0]:
-                 attack_matrix[0,self.marine1.x,self.marine1.y] = 1
+                 attack1_matrix[0,self.marine1.x,self.marine1.y] = 1
         else:
             self.marine_attack[0] = False
         marine2_matrix = np.zeros((1,64, 64))
         if self.marine2 is not None:
              marine2_matrix[0,self.marine2.x, self.marine2.y] = self.marine2.health / 45.0
              if self.marine_attack[1]:
-                 attack_matrix[0,self.marine2.x,self.marine2.y] = 1
+                 attack2_matrix[0,self.marine2.x,self.marine2.y] = 1
         else:
             self.marine_attack[1] = False
         marine3_matrix = np.zeros((1,64, 64))
         if self.marine3 is not None:
              marine3_matrix[0,self.marine3.x, self.marine3.y] = self.marine3.health / 45.0
              if self.marine_attack[2]:
-                 attack_matrix[0,self.marine3.x,self.marine3.y] = 1
+                 attack3_matrix[0,self.marine3.x,self.marine3.y] = 1
         else:
             self.marine_attack[2] = False
 
@@ -144,9 +146,11 @@ class Env:
         self.partial_state_queue.append(marine2_matrix)
         self.partial_state_queue.append(marine3_matrix)
         self.partial_state_queue.append(enemy_matrix)
-        self.partial_state_queue.append(attack_matrix)
+        self.partial_state_queue.append(attack1_matrix)
+        self.partial_state_queue.append(attack2_matrix)
+        self.partial_state_queue.append(attack3_matrix)
 
-        for i in range(5):
+        for i in range(7):
             self.partial_state_queue.popleft()
 
         self.state = np.zeros((0, 64, 64))
@@ -199,9 +203,6 @@ class Env:
                         if self.zealot.health < self.zealot_hp:
                             reward += ((self.zealot_hp - self.zealot.health) / 127.0) * 10
                             self.zealot_hp = self.zealot.health
-
-
-
             if self.raw_obs.last():
                 break
         new_state = self.get_state_from_obs(False)
