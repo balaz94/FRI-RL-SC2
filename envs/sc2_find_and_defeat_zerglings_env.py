@@ -23,7 +23,7 @@ class Env:
                     use_camera_position=True),
         'step_mul': 4,
         'game_steps_per_episode' : 0,
-        'visualize' : False,
+        'visualize' : True,
         'realtime': False
     }
 
@@ -99,7 +99,7 @@ class Env:
         raw_obs = self.take_action(action)
         new_state = self.get_state_from_obs(raw_obs, False)
         self.camera_pos = raw_obs.observation.camera_position
-        return new_state, int(raw_obs.reward), raw_obs.last()
+        return new_state, int(raw_obs.reward), raw_obs.last(), 0
 
     def take_action(self, action):
         x_axis_offset = 0
@@ -145,11 +145,7 @@ class Env:
             else:
                 mapped_action = actions.RAW_FUNCTIONS.no_op()
         elif  32 > action >= 24:
-            if self.last_target_pos is not None:
-                mapped_action = actions.RAW_FUNCTIONS.raw_move_camera(self.last_target_pos)
-            else:
-                mapped_action = actions.RAW_FUNCTIONS.no_op()
-
+            mapped_action = actions.RAW_FUNCTIONS.raw_move_camera([self.camera_pos[0] + x_axis_offset, self.camera_pos[1] + y_axis_offset])
         else:
             assert False
         raw_obs = self.env.step([mapped_action])[0]
