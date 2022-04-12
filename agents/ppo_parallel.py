@@ -148,37 +148,49 @@ class Agent:
             observations = torch.stack(observations).to(self.device)
 
             with torch.no_grad():
-                _, values = self.model(observations.view(-1, *input_dim))
 
-            values = values.view(-1, count_of_envs, 1).cpu()
-            for idx in range(count_of_processes):
-                connections[idx].send(values[idx])
+                _, values = self.model(torch.stack(observations).to(self.device).view(-1, *input_dim))
+                values = values.view(-1, count_of_envs, 1).cpu()
+            for conn_idx in range(count_of_processes):
+                connections[conn_idx].send(values[conn_idx])
 
-            for idx in range(count_of_processes):
-                log_probs, actions, values, advantages, scores = connections[idx].recv()
-                mem_actions[idx] = actions.to(self.device)
-                mem_log_probs[idx] = log_probs.to(self.device)
-                mem_values[idx] = values.to(self.device)
-                mem_advantages[idx] = advantages.to(self.device)
-                score.add(scores)
+            mem_observations, mem_actions, mem_log_probs, mem_target_values, mem_advantages, end_games = [], [], [], [], [], []
 
-            avg_score, best_score = score.mean()
-            print('iteration: ', iteration, '\taverage score: ', avg_score)
-            if best_score:
-                print('New best avg score has been achieved', avg_score)
-                torch.save(self.model.state_dict(), self.path + "/models/best.pt")
-            if iteration % 10 == 0:
-                torch.save(self.model.state_dict(), self.path + "/models/iteration_"
-                           + str(iteration) + ".pt")
+            for connection in connections:
+                observations, actions, log_probs, target_values, advantages, score_of_end_games = connection.recv()
+                
+                mem_observations.append(observations)
+                mem_actions.append(actions)
+                mem_log_probs.append(log_probs)
+                mem_target_values.append(target_values)
+                mem_advantages.append(advantages)
+                end_games.extend(score_of_end_games)
 
-            mem_observations = mem_observations.view(-1, *input_dim)
-            mem_actions = mem_actions.view(-1, 1)
-            mem_log_probs = mem_log_probs.view(-1, 1)
-            mem_values = mem_values.view(-1, 1)
-            mem_advantages = mem_advantages.view(-1, 1)
-            mem_advantages = (mem_advantages - mem_advantages.mean()) / (mem_advantages.std() + 1e-5)
+            count_of_end_games = len(end_games)
+            if count_of_end_games > 0:
+                new_score = True
+                count_of_episodes += count_of_end_games
+                scores.extend(end_games)
+                best_score = max(best_score, np.max(end_games))
 
-            s_policy, s_value, s_entropy = 0.0, 0.0, 0.0
+                length = len(scores)
+                if length > 100:
+                    scores = scores[length - 100:]
+                avg_score = np.average(scores)
+                prev_avg_score = best_avg_score
+                best_avg_score = max(best_avg_score, avg_score)
+                logs += '\n' + str(iteration) + ',' + str(count_of_episodes) + ',' + str(avg_score) + ',' + str(best_score) + ',' + str(best_avg_score)
+                if iteration % 1 == 0:
+                    print('iteration', iteration, '\tepisode', count_of_episodes, '\tavg score', avg_score, '\tbest score', best_score, '\tbest avg score', best_avg_score)
+
+            mem_observations = torch.stack(mem_observations).to(self.device).view((-1, ) + input_dim)
+            mem_actions = torch.stack(mem_actions).to(self.device).view(-1, 1)
+            mem_log_probs = torch.stack(mem_log_probs).to(self.device).view(-1, 1)
+            mem_target_values = torch.stack(mem_target_values).to(self.device).view(-1, 1)
+            mem_advantages = torch.stack(mem_advantages).to(self.device).view(-1, 1)
+            mem_advantages = (mem_advantages - torch.mean(mem_advantages)) / (torch.std(mem_advantages) + 1e-5)
+
+            sum_policy_loss, sum_value_loss, sum_entropy_loss = 0, 0, 0
 
             for epoch in range(count_of_epochs):
                 perm = torch.randperm(buffer_size, device=self.device).view(-1, batch_size)
@@ -208,16 +220,15 @@ class Agent:
                     torch.nn.utils.clip_grad_norm_(self.model.parameters(), 0.5)
                     self.optimizer.step()
 
-            mem_observations = mem_observations.view((mem_dim + input_dim))
-            mem_actions = mem_actions.view((*mem_dim, 1))
-            mem_log_probs = mem_log_probs.view((*mem_dim, 1))
-            mem_values = mem_values.view((*mem_dim, 1))
-            mem_advantages = mem_advantages.view((*mem_dim, 1))
 
-            logs_score += '\n' + str(iteration) + ',' \
-                          + str(score.get_count_of_episodes()) + ',' \
-                          + str(avg_score) + ',' \
-                          + str(score.get_best_avg_score())
+            logs_losses +=  '\n' + str(iteration) + ',' + str(len(scores)) + ',' + str(sum_policy_loss / count_of_losses) + ',' + str(sum_value_loss / count_of_losses) + ',' + str(sum_entropy_loss / count_of_losses)
+            if iteration % 1 == 0:
+                write_to_file(logs, self.results_path + 'data/' + self.name + '.txt')
+                write_to_file(logs_losses, self.results_path + 'data/' + self.name + '_loss.txt')
+                if best_avg_score > prev_avg_score:
+                    self.save_model()
+
+
 
             logs_loss += '\n' + str(iteration) + ',' \
                          + str(avg_score) + ',' \

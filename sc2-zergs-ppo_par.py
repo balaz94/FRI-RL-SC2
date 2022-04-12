@@ -31,19 +31,26 @@ def learning(count_of_iterations):
     device = "cuda"
     results_path = 'results/zergs/'
 
-    count_of_actions = 32
-    agent = Agent(PolicyValueModel(count_of_actions, 2048), optim, gamma, epsilon, 0.001, 0.5, 0.95, name, results_path, device)
+
+    agent = Agent(PolicyValueModel(32, 2048), gamma, entropy_loss_coef, value_loss_coef ,epsilon, lr, name, optim, device,results_path)
 
     count_of_processes = 3
-    count_of_envs = 2
-    count_of_steps = 128
-    batch_size = 128
+    count_of_envs = 1
+    count_of_steps = 4096
+    batch_size = 4096
+
     count_of_epochs = 4
     input_dim = (3, 64, 64)
 
-    agent.train("", Env, count_of_actions, count_of_iterations, count_of_processes, count_of_envs, count_of_steps,
-                count_of_epochs, batch_size, input_dim)
 
+    agent.load_model('results/zergs/models/ppo41_ppo.pt')
+    agent.train("", Env, count_of_processes, count_of_envs, count_of_iterations, count_of_steps, batch_size, count_of_epochs, first_iteration, input_dim)
+
+
+
+
+
+   
 def animation():
     model = PolicyValueModel(32, 2048) # zergs
     model.to("cuda")
@@ -69,8 +76,9 @@ def animation():
 
 
 if __name__ == "__main__":
-    #learning
-    animation()
+   learning(200)
+    # graph.make_graph.scatter_plot('results/zergs/data/ppo.csv')
+    # animation()
 
 
 
