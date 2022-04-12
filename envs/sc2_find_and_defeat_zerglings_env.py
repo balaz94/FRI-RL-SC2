@@ -23,7 +23,9 @@ class Env:
                     use_camera_position=True),
         'step_mul': 4,
         'game_steps_per_episode' : 0,
+
         'visualize' : False,
+
         'realtime': False
     }
 
@@ -99,7 +101,7 @@ class Env:
         raw_obs = self.take_action(action)
         new_state = self.get_state_from_obs(raw_obs, False)
         self.camera_pos = raw_obs.observation.camera_position
-        return new_state, int(raw_obs.reward), raw_obs.last()
+        return new_state, int(raw_obs.reward), raw_obs.last(), 0
 
     def take_action(self, action):
         x_axis_offset = 0

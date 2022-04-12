@@ -1,3 +1,4 @@
+import torch
 from pysc2.env import sc2_env
 from pysc2.lib import actions, features, units
 import numpy as np
@@ -76,7 +77,7 @@ class Env:
     def step(self, action):
         raw_obs = self.take_action(action)
         new_state = self.get_state_from_obs(raw_obs, False)
-        return new_state, int(raw_obs.reward), raw_obs.last()
+        return new_state, int(raw_obs.reward), raw_obs.last(), 0
 
     def take_action(self, action):
         x_axis_offset = 0
