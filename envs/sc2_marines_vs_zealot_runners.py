@@ -24,7 +24,7 @@ class Env:
                     use_camera_position=True),
         'step_mul': 4,
         'game_steps_per_episode' : 0,
-        'visualize' : True,
+        'visualize' : False,
         'realtime': False
     }
 
@@ -178,26 +178,59 @@ class Env:
                     self.marine1_hp = self.marine1.health
                 else:
                     if self.marine1 is not None and self.marine1.health < self.marine1_hp:
-                        reward -= ((self.marine1_hp - self.marine1.health) / 45.0) * 10
+                        reward -= ((self.marine1_hp - self.marine1.health) / 45.0)
+                        if np.argmax(self.get_distances(self.marine1, self.zealot) > 0.75):
+                            reward += 0.2
+                        else:
+                            reward -= 0.2
+                        is_alone = False
+                        distances = np.argmax(self.get_distances_marines(self.marine1, self.marine2, self.marine3, is_alone))
+                        if not is_alone:
+                            if distances < 0.30:
+                                reward += 0.2
+                            else:
+                                reward -= 0.2
                         self.marine1_hp = self.marine1.health
                 if self.marine2_hp == -1:
                     self.marine2_hp = self.marine2.health
                 else:
                     if self.marine2 is not None and self.marine2.health < self.marine2_hp:
-                        reward -= ((self.marine2_hp - self.marine2.health) / 45.0) * 10
+                        reward -= ((self.marine2_hp - self.marine2.health) / 45.0)
+                        if np.argmax(self.get_distances(self.marine2, self.zealot) > 0.75):
+                            reward += 0.2
+                        else:
+                            reward -= 0.2
+                        is_alone = False
+                        distances = np.argmax(self.get_distances_marines(self.marine2, self.marine1, self.marine3, is_alone))
+                        if not is_alone:
+                            if distances < 0.30:
+                                reward += 0.2
+                            else:
+                                reward -= 0.2
                         self.marine2_hp = self.marine2.health
                 if self.marine3_hp == -1:
                     self.marine3_hp = self.marine3.health
                 else:
                     if self.marine3 is not None and self.marine3.health < self.marine3_hp:
-                        reward -= ((self.marine3_hp - self.marine3.health) / 45.0) * 10
+                        reward -= ((self.marine3_hp - self.marine3.health) / 45.0)
+                        if np.argmax(self.get_distances(self.marine3, self.zealot)) > 0.75:
+                            reward += 0.2
+                        else:
+                            reward -= 0.2
+                        is_alone = False
+                        distances = np.argmax(self.get_distances_marines(self.marine3, self.marine1, self.marine2, is_alone))
+                        if not is_alone:
+                            if distances < 0.30:
+                                reward += 0.2
+                            else:
+                                reward -= 0.2
                         self.marine3_hp = self.marine3.health
                 if self.zealot is not None:
                     if self.zealot_hp == -1:
                         self.zealot_hp = self.zealot.health
                     else:
                         if self.zealot.health < self.zealot_hp:
-                            reward += ((self.zealot_hp - self.zealot.health) / 127.0) * 10
+                            reward += ((self.zealot_hp - self.zealot.health) / 127.0)
                             self.zealot_hp = self.zealot.health
 
 
@@ -284,3 +317,21 @@ class Env:
 
     def get_raw_obs(self):
         return self.raw_obs
+
+    def get_distances(self, unitA, unitB):
+        unitA_xy = [(unitA.x, unitA.y)]
+        unitB_xy = [(unitB.x, unitB.y)]
+        return abs(np.linalg.norm(np.array(unitA_xy) - np.array(unitB_xy), axis=1))
+
+    def get_distances_marines(self, unitA, unitB, unitC, isAlone):
+        unitA_xy = [(unitA.x, unitA.y)]
+        units = list()
+        if (unitB is not None):
+            units.append(unitB)
+        if (unitC is not None):
+            units.append(unitC)
+        if (unitB is None and unitC is None):
+            isAlone = True
+            return
+        units_xy = [(unit.x, unit.y) for unit in units]
+        return abs(np.linalg.norm(np.array(units_xy) - np.array(unitA_xy), axis=1))
