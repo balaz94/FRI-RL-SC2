@@ -34,7 +34,7 @@ def learning(count_of_iterations):
     entropy_loss_coef = 0.001
     value_loss_coef = 0.5
     epsilon = 0.1
-    lr = 0.00025
+    lr = 0.01
     name = 'ppo'
     optim = 'Adam'
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -44,7 +44,7 @@ def learning(count_of_iterations):
 
     #agent = PolicyValueModel(0.99, actions, Net(), 0.001, beta_entropy=0.01, id=0, name='sc2_custom_ZealotArmorUp_re_mc_10_ntr', depth = 21, height = 64, width = 64)
     agent = Agent(PolicyValueModel(27, 800), gamma, entropy_loss_coef, value_loss_coef ,epsilon, lr, name, optim, device,results_path)
-    #agent.model.load_state_dict(torch.load('models/sc2_custom_ZealotArmorUp_onlytest_0_2500_ppo.pt'))
+    agent.model.load_state_dict(torch.load('results/marines_vs_zealot/models/ppo556_ppo.pt'))
 
     # run_id = int(datetime.datetime.timestamp(datetime.datetime.now()))
     # os.mkdir("logs/sc2/custom_ZealotArmorUp/" + str(run_id))
@@ -53,8 +53,8 @@ def learning(count_of_iterations):
     # signal.signal(signal.SIGTERM, at_exist)
     # signal.signal(signal.SIGINT, at_exist)
 
-    count_of_processes = 1
-    count_of_envs = 1
+    count_of_processes = 3
+    count_of_envs = 2
     count_of_steps = 1024
     batch_size = 1024
     count_of_epochs = 4

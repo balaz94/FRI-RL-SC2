@@ -24,7 +24,7 @@ class Env:
                     use_camera_position=True),
         'step_mul': 4,
         'game_steps_per_episode' : 0,
-        'visualize' : True,
+        'visualize' : False,
         'realtime': False
     }
 
@@ -65,7 +65,7 @@ class Env:
         self.update_state = True
         self.marine_attack = np.array([False, False, False])
 
-        for i in range(20):
+        for i in range(28):
             arr = np.zeros((1, 64, 64))
             self.partial_state_queue.append(arr)
         return self.get_state_from_obs(True)
@@ -74,7 +74,7 @@ class Env:
         args = {**self.default_settings, **self.kwargs}
         self.env = sc2_env.SC2Env(**args)
 
-    def get_state_from_obs(self, reset):
+    def get_state_from_obs(self, reset, action = -1):
         zealot_array = self.get_units_by_type(self.raw_obs, units.Protoss.Zealot)
         if len(zealot_array) > 0:
             self.zealot = zealot_array[0]
@@ -112,29 +112,29 @@ class Env:
             if not mar_assigned:
                 self.marine3 = None
 
-        attack1_matrix = np.zeros((1,64, 64))
-        attack2_matrix = np.zeros((1,64, 64))
-        attack3_matrix = np.zeros((1,64, 64))
+        action1_matrix = np.zeros((1, 64, 64))
+        action2_matrix = np.zeros((1, 64, 64))
+        action3_matrix = np.zeros((1, 64, 64))
 
         marine1_matrix = np.zeros((1,64, 64))
         if self.marine1 is not None:
              marine1_matrix[0,self.marine1.x,self.marine1.y] = self.marine1.health / 45.0
              if self.marine_attack[0]:
-                 attack1_matrix[0,self.marine1.x,self.marine1.y] = 1
+                 action1_matrix[0,self.marine1.x,self.marine1.y] = action % 8
         else:
             self.marine_attack[0] = False
         marine2_matrix = np.zeros((1,64, 64))
         if self.marine2 is not None:
              marine2_matrix[0,self.marine2.x, self.marine2.y] = self.marine2.health / 45.0
              if self.marine_attack[1]:
-                 attack2_matrix[0,self.marine2.x,self.marine2.y] = 1
+                 action2_matrix[0,self.marine2.x,self.marine2.y] = action % 8
         else:
             self.marine_attack[1] = False
         marine3_matrix = np.zeros((1,64, 64))
         if self.marine3 is not None:
              marine3_matrix[0,self.marine3.x, self.marine3.y] = self.marine3.health / 45.0
              if self.marine_attack[2]:
-                 attack3_matrix[0,self.marine3.x,self.marine3.y] = 1
+                 action3_matrix[0,self.marine3.x,self.marine3.y] = action % 8
         else:
             self.marine_attack[2] = False
 
@@ -146,9 +146,9 @@ class Env:
         self.partial_state_queue.append(marine2_matrix)
         self.partial_state_queue.append(marine3_matrix)
         self.partial_state_queue.append(enemy_matrix)
-        self.partial_state_queue.append(attack1_matrix)
-        self.partial_state_queue.append(attack2_matrix)
-        self.partial_state_queue.append(attack3_matrix)
+        self.partial_state_queue.append(action1_matrix)
+        self.partial_state_queue.append(action2_matrix)
+        self.partial_state_queue.append(action3_matrix)
 
         for i in range(7):
             self.partial_state_queue.popleft()
@@ -182,30 +182,31 @@ class Env:
                     self.marine1_hp = self.marine1.health
                 else:
                     if self.marine1 is not None and self.marine1.health < self.marine1_hp:
-                        reward -= ((self.marine1_hp - self.marine1.health) / 45.0) * 10
+                        reward -= ((self.marine1_hp - self.marine1.health) / 45.0)
+                        reward -= ((unit))
                         self.marine1_hp = self.marine1.health
                 if self.marine2_hp == -1:
                     self.marine2_hp = self.marine2.health
                 else:
                     if self.marine2 is not None and self.marine2.health < self.marine2_hp:
-                        reward -= ((self.marine2_hp - self.marine2.health) / 45.0) * 10
+                        reward -= ((self.marine2_hp - self.marine2.health) / 45.0)
                         self.marine2_hp = self.marine2.health
                 if self.marine3_hp == -1:
                     self.marine3_hp = self.marine3.health
                 else:
                     if self.marine3 is not None and self.marine3.health < self.marine3_hp:
-                        reward -= ((self.marine3_hp - self.marine3.health) / 45.0) * 10
+                        reward -= ((self.marine3_hp - self.marine3.health) / 45.0)
                         self.marine3_hp = self.marine3.health
                 if self.zealot is not None:
                     if self.zealot_hp == -1:
                         self.zealot_hp = self.zealot.health
                     else:
                         if self.zealot.health < self.zealot_hp:
-                            reward += ((self.zealot_hp - self.zealot.health) / 127.0) * 10
+                            reward += ((self.zealot_hp - self.zealot.health) / 127.0)
                             self.zealot_hp = self.zealot.health
             if self.raw_obs.last():
                 break
-        new_state = self.get_state_from_obs(False)
+        new_state = self.get_state_from_obs(False, action)
         return new_state, reward, self.raw_obs.last()
 
     def take_action(self, action):
