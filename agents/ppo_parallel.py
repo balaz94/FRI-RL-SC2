@@ -31,7 +31,7 @@ def worker(connection, env_params, env_func, count_of_iterations, count_of_envs,
             mem_values[step] = values
 
             for idx in range(count_of_envs):
-                observation, reward, terminal, _ = envs[idx].step(actions[idx, 0].item())
+                observation, reward, terminal = envs[idx].step(actions[idx, 0].item())
                 mem_rewards[step, idx, 0] = reward
                 game_score[idx] += reward
                 if reward < 0:
