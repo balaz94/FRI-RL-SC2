@@ -183,7 +183,6 @@ class Env:
                 else:
                     if self.marine1 is not None and self.marine1.health < self.marine1_hp:
                         reward -= ((self.marine1_hp - self.marine1.health) / 45.0)
-                        reward -= ((unit))
                         self.marine1_hp = self.marine1.health
                 if self.marine2_hp == -1:
                     self.marine2_hp = self.marine2.health
